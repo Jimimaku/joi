@@ -85,6 +85,15 @@ describe('Template', () => {
         expect(template.render({}, {}, { context: { x: 'hello', y: '!' } }, {}, { errors: { escapeHtml: false } })).to.equal('text hello! {{escaped}} xxx abc {{{ignore}} 123 {{x');
     });
 
+    it('parses template with only escaped braces', () => {
+
+        const source = 'text with only \\{escaped\\} braces should be as is';
+        const template = Joi.x(source);
+
+        expect(template.source).to.equal(source);
+        expect(template.render()).to.equal('text with only {escaped} braces should be as is');
+    });
+
     it('parses template with missing elements in binary operation', () => {
 
         const source = 'text {$x || $y}';
