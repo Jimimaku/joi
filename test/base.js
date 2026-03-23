@@ -4070,6 +4070,19 @@ describe('any', () => {
                     issues: [{ message: '"foo" requires a positive number' }]
                 });
             });
+
+            it('applies libraryOptions when passed to validate()', () => {
+
+                const schema = Joi.object({
+                    foo: Joi.number().min(0).error((errors) => new Error('"foo" requires a positive number'))
+                });
+                expect(schema['~standard'].validate({ foo: 1, bar: 'baz' })).to.equal({
+                    issues: [{ message: '"bar" is not allowed', path: ['bar'] }]
+                });
+                expect(schema['~standard'].validate({ foo: 1, bar: 'baz' }, { libraryOptions: { allowUnknown: true } })).to.equal({
+                    value: { foo: 1, bar: 'baz' }
+                });
+            });
         });
     });
 });
