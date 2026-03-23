@@ -3,7 +3,7 @@
     "description": "Object schema validation",
     "version": "18.1.0",
     "repository": {
-        "url": "git://github.com/hapijs/joi",
+        "url": "git://github.com/hapijs/joi.git",
         "type": "git"
     },
     "engines": {
