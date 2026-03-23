@@ -1,12 +1,36 @@
 'use strict';
 
 const Code = require('@hapi/code');
-
+const Ajv = require('ajv/dist/2020');
 
 const internals = {};
 
 
 const { expect } = Code;
+
+
+internals.ajvValidator = new Ajv({
+    strict: true,
+    allowUnionTypes: true,
+    formats: {
+        banana: true,
+        base64: true,
+        binary: true,
+        'data-uri': true,
+        'date-time': true,
+        duration: true,
+        email: true,
+        hex: true,
+        hostname: true,
+        ip: true,
+        ipv4: true,
+        token: true,
+        uri: true,
+        uuid: true
+    },
+    keywords: ['x-constraint', 'foo'],
+    strictTuples: true
+});
 
 
 exports.skip = Symbol('skip');
@@ -108,11 +132,31 @@ exports.validate = function (schema, prefs, tests) {
 };
 
 
+exports.validateJsonSchema = function (schema, expectedInput, expectedOutput) {
+
+    try {
+        const js = schema['~standard'].jsonSchema;
+        const input = js.input();
+        expect(input).to.equal(expectedInput);
+        internals.ajvValidator.compile(input);
+
+        // If we don't have an expected output, it must mean it should be identical to the input
+        const output = js.output();
+        expect(output).to.equal(expectedOutput ?? expectedInput);
+        internals.ajvValidator.compile(output);
+    }
+    catch (err) {
+        console.error(err.stack);
+        err.at = internals.thrownAt();      // Adjust error location to test
+        throw err;
+    }
+};
+
 internals.thrownAt = function () {
 
     const error = new Error();
     const frame = error.stack.replace(error.toString(), '').split('\n').slice(1).filter((line) => !line.includes(__filename))[0];
-    const at = frame.match(/^\s*at \(?(.+)\:(\d+)\:(\d+)\)?$/);
+    const at = frame.match(/^\s*at \(?(.+):(\d+):(\d+)\)?$/);
     return {
         filename: at[1],
         line: at[2],

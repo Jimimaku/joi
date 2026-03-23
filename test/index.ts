@@ -1481,4 +1481,15 @@ expect.error(Joi.string('x'));
     }
     expect.error(result.value)
   }
+
+  {
+    // Standard JSON Schema
+    const schema = Joi.string().min(5);
+    const js = schema['~standard'].jsonSchema;
+    const input = js.input({ target: 'draft-2020-12' });
+    const output = js.output({ target: 'draft-2020-12' });
+
+    expect.type<Record<string, unknown>>(input);
+    expect.type<Record<string, unknown>>(output);
+  }
 }
