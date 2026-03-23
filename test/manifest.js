@@ -254,6 +254,15 @@ describe('Manifest', () => {
             expect(Joi.invalid(1).allow(1).describe()).to.equal({ type: 'any', allow: [1] });
         });
 
+        it('handles NaN in allow list', () => {
+
+            const schema = Joi.number().allow(NaN);
+            const desc = schema.describe();
+            expect(desc.type).to.equal('number');
+            expect(desc.allow).to.have.length(1);
+            expect(Number.isNaN(desc.allow[0])).to.equal(true);
+        });
+
         it('describes ruleset changes', () => {
 
             const schema = Joi.string().min(1).keep();
