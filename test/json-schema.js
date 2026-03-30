@@ -1070,39 +1070,38 @@ describe('jsonSchema', () => {
 
             Helper.validateJsonSchema(Joi.number().positive(), {
                 type: 'number',
-                'x-constraint': {
-                    sign: 'positive'
-                }
+                exclusiveMinimum: 0
             });
 
             Helper.validateJsonSchema(Joi.number().positive().only(), {
                 type: 'number',
-                'x-constraint': {
-                    sign: 'positive'
-                }
+                exclusiveMinimum: 0
             });
 
             Helper.validateJsonSchema(Joi.number().negative(), {
                 type: 'number',
-                'x-constraint': {
-                    sign: 'negative'
-                }
+                exclusiveMaximum: 0
             });
 
             Helper.validateJsonSchema(Joi.number().positive().multiple(3), {
                 type: 'number',
                 multipleOf: 3,
-                'x-constraint': {
-                    sign: 'positive'
-                }
+                exclusiveMinimum: 0
             });
 
             Helper.validateJsonSchema(Joi.number().multiple(3).positive(), {
                 type: 'number',
                 multipleOf: 3,
-                'x-constraint': {
-                    sign: 'positive'
-                }
+                exclusiveMinimum: 0
+            });
+        });
+
+        it('represents number.port() constraints', () => {
+
+            Helper.validateJsonSchema(Joi.number().port(), {
+                type: 'integer',
+                minimum: 0,
+                maximum: 65535
             });
         });
 
