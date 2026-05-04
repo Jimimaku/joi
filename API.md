@@ -2035,8 +2035,10 @@ Note that named links must be found in a direct ancestor of the link. The names 
 Links are resolved once (per runtime) and the result schema cached. If you reuse a link in different places, the first time it is resolved at run-time, the result will be used by all other instances. If you want each link to resolve relative to the place it is used, use a separate `Joi.link()` statement in each place or set the `relative()` flag.
 
 ::: warning
-It is strongly advised to set a [`link.maxRecursion(limit)`](#linkmaxrecursionlimit) on recursive links to bound the validation depth and protect against deeply nested inputs.
+It is strongly advised to set a [`link.maxRecursion(limit)`](#linkmaxrecursionlimit) on recursive links to bound the validation depth and protect against deeply nested inputs. As a safety net, when validation exceeds the runtime call stack while resolving a link, validation fails with the `link.depth` error code instead of crashing the process.
 :::
+
+Possible validation errors: [`link.depth`](#linkdepth)
 
 Named links:
 
@@ -2107,6 +2109,8 @@ const schema = Joi.object({
     keys: Joi.array().items(Joi.link('...').maxRecursion(10))
 });
 ```
+
+Possible validation errors: [`link.maxRecursion`](#linkmaxrecursion)
 
 ### `number`
 
@@ -3949,6 +3953,21 @@ Additional local context properties:
 ```ts
 {
     n: number // Minimum expected arity
+}
+```
+
+#### `link.depth`
+
+The validation chain exceeded the runtime call stack while resolving a recursive link. Returned instead of throwing a `RangeError`. Set [`link.maxRecursion(limit)`](#linkmaxrecursionlimit) to bound the depth deterministically.
+
+#### `link.maxRecursion`
+
+The link was entered more times in a single validation chain than the limit set via [`link.maxRecursion(limit)`](#linkmaxrecursionlimit).
+
+Additional local context properties:
+```ts
+{
+    limit: number // Maximum number of times the link may be entered
 }
 ```
 
