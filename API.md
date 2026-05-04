@@ -2034,6 +2034,10 @@ Note that named links must be found in a direct ancestor of the link. The names 
 
 Links are resolved once (per runtime) and the result schema cached. If you reuse a link in different places, the first time it is resolved at run-time, the result will be used by all other instances. If you want each link to resolve relative to the place it is used, use a separate `Joi.link()` statement in each place or set the `relative()` flag.
 
+::: warning
+It is strongly advised to set a [`link.maxRecursion(limit)`](#linkmaxrecursionlimit) on recursive links to bound the validation depth and protect against deeply nested inputs.
+:::
+
 Named links:
 
 ```js
@@ -2089,6 +2093,20 @@ const schema = Joi.object({
 #### `link.concat(schema)`
 
 Same as [`any.concat()`](#anyconcatschema) but the schema is merged after the link is resolved which allows merging with schemas of the same type as the resolved link. Will throw an exception during validation if the merged types are not compatible.
+
+#### `link.maxRecursion(limit)`
+
+Limits the maximum number of times the same link is allowed to resolve within a single validation chain, where:
+- `limit` - a positive integer specifying how many times the link may be entered.
+
+Validation fails with the `link.maxRecursion` error code when the limit is exceeded. Useful to guard recursive schemas against deeply nested inputs.
+
+```js
+const schema = Joi.object({
+    name: Joi.string().required(),
+    keys: Joi.array().items(Joi.link('...').maxRecursion(10))
+});
+```
 
 ### `number`
 

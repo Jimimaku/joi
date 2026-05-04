@@ -319,6 +319,84 @@ describe('link', () => {
         expect(() => schema.validate({ x: 123 })).to.throw('"x" contains link reference "ref:y" which is another link');
     });
 
+    describe('maxRecursion()', () => {
+
+        it('limits recursion depth', () => {
+
+            const schema = Joi.object({
+                name: Joi.string().required(),
+                keys: Joi.array().items(Joi.link('...').maxRecursion(2))
+            });
+
+            Helper.validate(schema, [
+                [{ name: 'a' }, true],
+                [{ name: 'a', keys: [{ name: 'b' }] }, true],
+                [{ name: 'a', keys: [{ name: 'b', keys: [{ name: 'c' }] }] }, true],
+                [{ name: 'a', keys: [{ name: 'b', keys: [{ name: 'c', keys: [{ name: 'd' }] }] }] }, false, {
+                    message: '"keys[0].keys[0].keys[0]" exceeds maximum recursion depth of 2',
+                    path: ['keys', 0, 'keys', 0, 'keys', 0],
+                    type: 'link.maxRecursion',
+                    context: { limit: 2, label: 'keys[0].keys[0].keys[0]', value: { name: 'd' }, key: 0 }
+                }]
+            ]);
+        });
+
+        it('limits recursion depth (root link)', () => {
+
+            const schema = Joi.object({
+                name: Joi.string().required(),
+                keys: Joi.array().items(Joi.link('/').maxRecursion(1))
+            });
+
+            Helper.validate(schema, [
+                [{ name: 'a' }, true],
+                [{ name: 'a', keys: [{ name: 'b' }] }, true],
+                [{ name: 'a', keys: [{ name: 'b', keys: [{ name: 'c' }] }] }, false, {
+                    message: '"keys[0].keys[0]" exceeds maximum recursion depth of 1',
+                    path: ['keys', 0, 'keys', 0],
+                    type: 'link.maxRecursion',
+                    context: { limit: 1, label: 'keys[0].keys[0]', value: { name: 'c' }, key: 0 }
+                }]
+            ]);
+        });
+
+        it('limits recursion depth (named link via id)', () => {
+
+            const schema = Joi.object({
+                firstName: Joi.string().required(),
+                lastName: Joi.string().required(),
+                friends: Joi.array().items(Joi.link('#person').maxRecursion(2))
+            }).id('person');
+
+            Helper.validate(schema, [
+                [{ firstName: 'a', lastName: 'a' }, true],
+                [{ firstName: 'a', lastName: 'a', friends: [{ firstName: 'b', lastName: 'b' }] }, true],
+                [{
+                    firstName: 'a', lastName: 'a',
+                    friends: [{
+                        firstName: 'b', lastName: 'b',
+                        friends: [{
+                            firstName: 'c', lastName: 'c',
+                            friends: [{ firstName: 'd', lastName: 'd' }]
+                        }]
+                    }]
+                }, false, {
+                    message: '"friends[0].friends[0].friends[0]" exceeds maximum recursion depth of 2',
+                    path: ['friends', 0, 'friends', 0, 'friends', 0],
+                    type: 'link.maxRecursion',
+                    context: { limit: 2, label: 'friends[0].friends[0].friends[0]', value: { firstName: 'd', lastName: 'd' }, key: 0 }
+                }]
+            ]);
+        });
+
+        it('errors on invalid limit', () => {
+
+            expect(() => Joi.link('...').maxRecursion(0)).to.throw('limit must be a positive integer');
+            expect(() => Joi.link('...').maxRecursion(1.5)).to.throw('limit must be a positive integer');
+            expect(() => Joi.link('...').maxRecursion('2')).to.throw('limit must be a positive integer');
+        });
+    });
+
     describe('when()', () => {
 
         it('validates a schema with when()', () => {
